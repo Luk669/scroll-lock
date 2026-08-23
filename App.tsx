@@ -1,77 +1,41 @@
-import React, { useState } from "react";
-import { StyleSheet, View, Pressable, Text } from "react-native";
+import React from "react";
+import { StyleSheet, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import Constants from "expo-constants";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import YouTubeScreen from "./src/screens/YouTubeScreen";
 import InstagramScreen from "./src/screens/InstagramScreen";
+import FacebookScreen from "./src/screens/FacebookScreen";
 
-type Tab = "youtube" | "instagram";
+// Jeder Build zeigt genau eine Plattform — welche, bestimmt APP_VARIANT
+// (gesetzt in app.config.js, siehe dort). Dadurch entstehen aus einer
+// Codebasis drei separat installierbare Apps (TubeLite, InstaLite,
+// FaceLite), statt einer App mit internem Tab-Umschalter.
+const SCREENS = {
+  youtube: YouTubeScreen,
+  instagram: InstagramScreen,
+  facebook: FacebookScreen,
+} as const;
+
+type Variant = keyof typeof SCREENS;
 
 export default function App() {
-  const [tab, setTab] = useState<Tab>("youtube");
+  const variant = (Constants.expoConfig?.extra?.variant as Variant) ?? "youtube";
+  const Screen = SCREENS[variant] ?? YouTubeScreen;
 
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.root} edges={["top", "bottom"]}>
         <StatusBar style="light" />
         <View style={styles.content}>
-          {tab === "youtube" ? <YouTubeScreen /> : <InstagramScreen />}
-        </View>
-        <View style={styles.tabBar}>
-          <TabButton
-            label="YouTube"
-            active={tab === "youtube"}
-            onPress={() => setTab("youtube")}
-          />
-          <TabButton
-            label="Instagram"
-            active={tab === "instagram"}
-            onPress={() => setTab("instagram")}
-          />
+          <Screen />
         </View>
       </SafeAreaView>
     </SafeAreaProvider>
   );
 }
 
-function TabButton({
-  label,
-  active,
-  onPress,
-}: {
-  label: string;
-  active: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable style={styles.tabButton} onPress={onPress}>
-      <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#000" },
   content: { flex: 1 },
-  tabBar: {
-    flexDirection: "row",
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: "#333",
-    backgroundColor: "#111",
-  },
-  tabButton: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: "center",
-  },
-  tabLabel: {
-    color: "#888",
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  tabLabelActive: {
-    color: "#fff",
-  },
 });

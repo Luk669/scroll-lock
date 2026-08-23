@@ -5,12 +5,16 @@
   "private": true,
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web"
+    "start:youtube": "cross-env APP_VARIANT=youtube expo start",
+    "start:instagram": "cross-env APP_VARIANT=instagram expo start",
+    "start:facebook": "cross-env APP_VARIANT=facebook expo start",
+    "build:youtube": "eas build --profile youtube",
+    "build:instagram": "eas build --profile instagram",
+    "build:facebook": "eas build --profile facebook"
   },
   "dependencies": {
     "expo": "~51.0.0",
+    "expo-constants": "~16.0.2",
     "expo-status-bar": "~1.12.1",
     "react": "18.2.0",
     "react-native": "0.74.5",
@@ -21,6 +25,7 @@
     "@babel/core": "^7.24.0",
     "@types/react": "~18.2.79",
     "babel-preset-expo": "~11.0.0",
+    "cross-env": "^7.0.3",
     "typescript": "~5.3.3"
   }
 }

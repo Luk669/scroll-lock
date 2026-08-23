@@ -1,0 +1,23 @@
+{
+  "cli": {
+    "version": ">= 12.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "youtube": {
+      "distribution": "internal",
+      "env": { "APP_VARIANT": "youtube" }
+    },
+    "instagram": {
+      "distribution": "internal",
+      "env": { "APP_VARIANT": "instagram" }
+    },
+    "facebook": {
+      "distribution": "internal",
+      "env": { "APP_VARIANT": "facebook" }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

@@ -65,11 +65,76 @@ gesperrt sind.
   zeitlicher statt algorithmischer Reihenfolge — das nächstliegende
   Äquivalent.
 
+## Zeitplan (Stundenplan)
+
+Jede App setzt einen wöchentlichen Zeitplan durch. Ist die Nutzung nicht
+erlaubt, wird die WebView **ausgehängt** (nicht nur überdeckt) — es wird also
+auch nichts im Hintergrund nachgeladen.
+
+**Zeitfenster pro Wochentag.** Ein Fenster hat Beginn, Ende und entweder ein
+Minutenbudget oder "unbegrenzt". Zeiten, die von keinem Fenster abgedeckt
+sind, gelten als gesperrt. Voreingestellt ist:
+
+| | Zeitfenster |
+|---|---|
+| Mo–Fr | 07:00–20:00 mit 45 Min Budget, danach 20:00–23:00 unbegrenzt |
+| Sa+So | 09:00–23:00 unbegrenzt |
+
+Jeder Wochentag lässt sich einzeln einstellen; mit "Mo–Fr", "Sa+So" und
+"Alle" wird der aktuelle Tag auf die anderen übertragen.
+
+**Budget-Anrechnung.** Zeit wird nur angerechnet, solange die App im
+Vordergrund ist und ein Fenster mit Budget aktiv ist. Standby-Sprünge über
+fünf Minuten werden verworfen, damit ein aufwachendes Gerät nicht das ganze
+Budget verbrennt. Verbrauchsdaten älter als 14 Tage werden gelöscht.
+
+**Sperre für Prüfungsphasen.** Der Plan lässt sich für 1, 2 oder 4 Wochen
+sperren. Bis zum Ablauf sind dann keinerlei Änderungen möglich — auch keine
+Verschärfungen, und die Sperre lässt sich nicht vorzeitig aufheben.
+
+### Grenzen der Sperre
+
+Die Sperre wirkt **innerhalb der App**. Wer die App löscht und neu
+installiert, setzt Zeitplan und Budget zurück — lokaler Speicher überlebt
+eine Deinstallation nicht. Eine wirklich manipulationssichere Sperre bräuchte
+Apples Screen-Time-Framework (siehe unten) oder einen Server-gestützten
+Account.
+
+## App Store — Stand der Dinge
+
+Die aktuelle Architektur (WebView um die mobilen Webseiten) ist **nicht**
+für den App Store geeignet:
+
+- **Richtlinie 4.2** (Minimum Functionality): reine Web-Wrapper werden
+  abgelehnt.
+- **Richtlinie 5.2.1** (Intellectual Property): fremde Marken und Inhalte —
+  die Arbeitsnamen "TubeLite"/"InstaLite"/"FaceLite" wären ohnehin zu
+  ersetzen.
+- Die AGB von Google und Meta untersagen inoffizielle Clients.
+
+Für eine echte Veröffentlichung wäre der Weg ein anderer, und zwar der, den
+Apps wie Opal oder ScreenZen gehen:
+
+1. Native iOS-App mit dem **FamilyControls/DeviceActivity**-Framework
+   (Entitlement muss bei Apple beantragt werden). Sie sperrt die *offiziellen*
+   Apps nach Zeitplan — genau die Logik aus `src/schedule/`.
+2. Optional eine **Safari-Web-Erweiterung**, die Shorts/Reels im Browser
+   ausblendet — das ist der erlaubte Weg für die Inhaltsfilterung.
+
+Die Zeitplan-Logik in `src/schedule/` ist bewusst frei von WebView-Bezügen
+und lässt sich bei einem solchen Umbau weiterverwenden.
+
 ## Setup
 
 ```bash
 npm install
 npm run start:youtube    # oder start:instagram / start:facebook
+```
+
+Tests der Zeitplan-Logik:
+
+```bash
+npm test
 ```
 
 Dann in Expo Go (iOS/Android) scannen, oder `i` / `a` für Simulator/Emulator
@@ -102,3 +167,8 @@ Jeder Befehl erzeugt einen eigenen Build mit eigenem Namen/Bundle-ID (siehe
 | `src/injected/instagram.ts` | Injiziertes JS: Following-Feed erzwingen, Reels ausblenden |
 | `src/injected/facebook.ts` | Injiziertes JS: Reels ausblenden |
 | `eas.json` | Build-Profile für die drei Varianten |
+| `src/schedule/engine.ts` | Regel-Engine: Fenster, Budgets, nächste Freigabe |
+| `src/schedule/useScheduleGuard.ts` | Lädt den Plan, bewertet ihn, rechnet Zeit an |
+| `src/components/ScheduleGate.tsx` | Gibt die Inhalte frei oder sperrt sie |
+| `src/screens/ScheduleSettingsScreen.tsx` | Zeitplan bearbeiten und sperren |
+| `src/schedule/engine.test.ts` | Tests der Regel-Engine (`npm test`) |

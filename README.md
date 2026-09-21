@@ -54,6 +54,25 @@ Android-API. Nutze stattdessen die Bordmittel deines Handys:
 So bleiben TubeLite/InstaLite/FaceLite nutzbar, während die offiziellen Apps
 gesperrt sind.
 
+### Anmeldung
+
+Die Anmeldung läuft in der WebView. Dafür sind Cookies (auch von
+Drittanbietern), DOM-Storage und eine Browser-übliche User-Agent-Kennung
+gesetzt (`src/components/FilteredWebView.tsx`).
+
+**Google ist der Sonderfall:** Google lässt Anmeldungen aus eingebetteten
+WebViews grundsätzlich nicht zu und antwortet mit `disallowed_useragent`.
+Eine andere User-Agent-Kennung umgeht das nicht zuverlässig — Google prüft
+weitere Merkmale. Für TubeLite heißt das: Der Abo-Feed funktioniert nur,
+solange eine gültige Sitzung besteht; eine Erstanmeldung im eingebetteten
+Browser kann fehlschlagen.
+
+Der saubere Weg für YouTube wäre deshalb, die WebView aufzugeben und
+stattdessen die **YouTube Data API v3** mit OAuth über den Systembrowser
+(`expo-auth-session`) anzusprechen: Abos abfragen, Shorts anhand der
+Videolänge herausfiltern und eine eigene Liste anzeigen. Das ist von Google
+ausdrücklich vorgesehen und wäre auch für den App Store tragfähig.
+
 ### Grenzen
 
 - Die Filterung passiert über das DOM der mobilen Webseiten (CSS-Selektoren
@@ -160,6 +179,7 @@ Jeder Befehl erzeugt einen eigenen Build mit eigenem Namen/Bundle-ID (siehe
 |---|---|
 | `app.config.js` | Legt pro `APP_VARIANT` Name/Slug/Bundle-ID fest |
 | `App.tsx` | Einstiegspunkt, rendert je nach Variante genau einen Screen |
+| `src/components/FilteredWebView.tsx` | Gemeinsame WebView: Filter-Skript, Login-Einstellungen, blockierte Pfade |
 | `src/screens/YouTubeScreen.tsx` | WebView für den YouTube-Abo-Feed |
 | `src/screens/InstagramScreen.tsx` | WebView für den Instagram-Following-Feed |
 | `src/screens/FacebookScreen.tsx` | WebView für den Facebook-Chronologisch-Feed |

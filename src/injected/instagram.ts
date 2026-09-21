@@ -2,37 +2,59 @@
  * Wird in die instagram.com-WebView injiziert.
  *
  * Aufgabe:
- *  - Falls vorhanden, den Feed-Umschalter oben auf "Following" (statt "For
- *    you") stellen, damit nur Beiträge abonnierter/gefolgter Konten
- *    erscheinen.
+ *  - Auf der Startseite den Feed-Umschalter auf "Following" stellen, damit
+ *    nur Beiträge abonnierter/gefolgter Konten erscheinen.
  *  - Den Reels-Tab (untere Navigation) und die Reels-Vorschauleiste im Feed
  *    ausblenden.
  *  - Läuft per MutationObserver dauerhaft weiter, da Instagram eine
  *    Single-Page-App ist.
+ *
+ * Wichtig: Der Umschalter wird NUR auf der Startseite und nur einmal pro
+ * Seitenaufruf betätigt. Auf Profilseiten heißt der Entfolgen-Button
+ * ebenfalls "Following" — ein blindes Klicken würde dort Konten entfolgen.
  */
 export const INSTAGRAM_INJECTED_JS = `
 (function () {
+  var switchedPath = null;
+
+  function onHomeFeed() {
+    return location.pathname === '/' || location.pathname === '';
+  }
+
   function enforceFollowingFeed() {
+    if (!onHomeFeed()) return;
+    if (switchedPath === location.href) return;
+
+    // Der Feed-Umschalter sitzt in der Kopfzeile und ist ein Tab bzw.
+    // Menüpunkt — nicht der Entfolgen-Button einer Profilseite.
     var candidates = Array.prototype.slice.call(
-      document.querySelectorAll('div[role="button"], a, span')
+      document.querySelectorAll(
+        'header [role="tab"], header [role="menuitem"], ' +
+          'div[role="tablist"] [role="tab"], main [role="tablist"] [role="tab"]'
+      )
     );
-    var followingBtn = candidates.find(function (el) {
+
+    var followingTab = candidates.filter(function (el) {
       return (el.textContent || '').trim() === 'Following';
-    });
-    if (followingBtn && followingBtn.getAttribute('aria-selected') !== 'true') {
-      followingBtn.click();
+    })[0];
+
+    if (!followingTab) return;
+    if (followingTab.getAttribute('aria-selected') === 'true') {
+      switchedPath = location.href;
+      return;
     }
+
+    followingTab.click();
+    switchedPath = location.href;
   }
 
   function hideReels() {
-    // Reels-Links (Tab unten, Menüpunkte)
     document
       .querySelectorAll('a[href="/reels/"], a[href^="/reels/"]')
       .forEach(function (el) {
         el.style.display = 'none';
       });
 
-    // Reels-Vorschauleiste oben im Feed
     document.querySelectorAll('[aria-label="Reels"]').forEach(function (el) {
       var container = el.closest('section, div');
       if (container) {
